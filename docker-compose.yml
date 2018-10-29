@@ -1,34 +1,41 @@
 # Docker Compose file for CentralThing
-# Test only!!!
+# Test only!!! (Portainer)
 
 version: '2.0'
 
 services:
   reverse-proxy:
-    image: traefik  # The official Traefik docker image
-    command: --api --docker  # Enables the web UI and tells Træfik to listen to docker
+    image: traefik
     ports:
-      - "80:80"      # The HTTP port
-      - "8080:8080"  # The Web UI (enabled by --api)
+      - 80:80 
+      - 8080:8080  # The Web UI (enabled by --api)
     volumes:
-      - /var/run/docker.sock:/var/run/docker.sock  # So that Traefik can listen to the Docker events
+      - /var/run/docker.sock:/var/run/docker.sock 
+    command: --api --docker
+
+
+  portainer:
+    ports:
+      - 9000:9000
+		volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/portainer/data:/data
+		command: -H unix:///var/run/docker.sock
 
 
   influxdb:
     image: influxdb
-    container_name: influxdb
     volumes:
       - ./data/influxdb:/var/lib/influxdb
 
 
   grafana:
     image: grafana/grafana
-    container_name: grafana
     volumes:
       - ./data/grafana:/var/lib/grafana
       - /etc/localtime:/etc/localtime:ro
     ports:
-      - 3001:3000/tcp
+      - 3000:3000/tcp
     labels:
       - "traefik.enable=true"
       - "traefik.backend=grafana"
@@ -36,7 +43,7 @@ services:
 
  
   nodered:
-    image: nodered/node-red-docker:v8
+    image: nodered/node-red-docker
     ports:
       - 1880:1880
       - 9229:9229
