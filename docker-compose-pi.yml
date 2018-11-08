@@ -1,0 +1,85 @@
+# CentralThing docker-compose.yml 
+# For: Raspberry Pi ARM   ## the docker images differ between ARM and X86
+# Version: 01
+#
+version: '2'
+
+services:
+  traefik:
+    image: hypriot/rpi-traefik
+    restart: always
+    command: --docker
+    ports:
+      - "80:80"  
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+
+  portainer:
+    image: hypriot/rpi-portainer
+    restart: always
+    command: -H unix:///var/run/docker.sock
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./portainer:/data
+    labels:
+      - "traefik.frontend.rule=PathPrefixStrip:/portainer"
+      - "traefik.backend=portainer"
+      - "traefik.port=9000"
+
+
+  grafana:
+    image: raymondmm/grafana
+    restart: always
+    volumes:
+      - ./grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+      - GF_SECURITY_ADMIN_USER=grafana
+    labels:
+      - "traefik.frontend.rule=PathPrefixStrip:/grafana"
+      - "traefik.backend=grafana"
+      - "traefik.port=3000"
+
+
+  nodered:
+    image: easypi/node-red-arm
+    restart: always
+    hostname: nodered
+    volumes:
+      - ./nodered:/data
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+    labels:
+      - "traefik.frontend.rule=PathPrefixStrip:/nodered"
+      - "traefik.backend=nodered"
+      - "traefik.port=1880"
+
+
+  influxdb:
+    image: hypriot/rpi-influxdb
+    restart: always
+    hostname: influxdb
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+
+
+  mosquitto:
+    image: panuwitp/mosquitto-arm
+    restart: always
+    hostname: mosquitto
+    ports:
+      - 1883:1883
+
+
+  nginx:
+    image: nginx
+    restart: always
+    volumes:
+      - ./nginx:/usr/share/nginx/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=nginx"
+      - "traefik.port=80"
+      - "traefik.frontend.rule=Host:ctsrv.loenielan" #set your hostname and networkname
