@@ -28,8 +28,8 @@ docker-compose ps
 docker exec -it centralthing_influxdb_1 curl -XPOST 'http://localhost:8086/query' --data-urlencode 'q=CREATE DATABASE "centralthing"'
 docker exec -it centralthing_influxdb_1 curl -XPOST 'http://localhost:8086/query' --data-urlencode 'q=SHOW DATABASES'
 
-#docker exec -it centralthing_nodered_1 sh /data/installinflux.sh
-#docker-compose restart nodered
+docker exec -it centralthing_nodered_1 sh /data/installpalettes.sh
+docker-compose restart nodered
 
 
 echo "Copy and run: alias u=\"sudo docker-compose up -d\" && alias p=\"sudo docker-compose ps\" && alias d=\"sudo docker-compose down\" && alias r=\"sudo docker-compose restart \" && alias s=\"sudo docker-compose stop \"" 
