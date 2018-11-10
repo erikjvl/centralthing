@@ -47,7 +47,7 @@ services:
 
 
   nodered:
-    image: easypi/node-red-arm
+    image: nodered/node-red-docker:rpi  #easypi/node-red-arm
     restart: always
     hostname: nodered
     volumes:
