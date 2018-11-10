@@ -87,4 +87,4 @@ services:
       - "traefik.enable=true"
       - "traefik.backend=nginx"
       - "traefik.port=80"
-      - "traefik.frontend.rule=PathPrefixStrip:/"
+      - "traefik.frontend.rule=PathPrefix:/"
