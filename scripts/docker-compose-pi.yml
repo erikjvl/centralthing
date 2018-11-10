@@ -66,11 +66,12 @@ services:
 
   influxdb:
     image: hypriot/rpi-influxdb
+    environment:
+      - PRE_CREATE_DB="centralthing" 
     restart: always
     hostname: influxdb
     volumes:
-      - ./influxdb:/var/lib/influxdb
-
+      - ./influxdb:/data   #diffent from x86
 
   mosquitto:
     image: panuwitp/mosquitto-arm
