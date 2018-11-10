@@ -1,0 +1,92 @@
+# CentralThing docker-compose.yml 
+# For: X86     ## the docker images differ between ARM and X86
+# Version: 01
+#
+version: '2.0'
+
+services:
+  traefik:
+    image: traefik
+    restart: always
+    ports:
+      - 80:80 
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock 
+    command: --docker
+
+
+  portainer:
+    image: portainer/portainer
+    restart: always
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /opt/portainer/data:/data
+    command: -H unix:///var/run/docker.sock
+    labels:
+      - "traefik.frontend.rule=PathPrefixStrip:/portainer"
+      - "traefik.backend=portainer"
+      - "traefik.port=9000"
+
+
+  grafana:
+    image: grafana/grafana
+    restart: always
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini
+      - ./grafana:/var/lib/grafana
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=grafana
+      - GF_SECURITY_ADMIN_USER=grafana
+      - GF_PATHS_PROVISIONING=/var/lib/grafana/provisioning
+    labels:
+      - "traefik.frontend.rule=PathPrefixStrip:/grafana"
+      - "traefik.backend=grafana"
+      - "traefik.port=3000"
+    depends_on:
+      - influxdb
+
+ 
+  nodered:
+    image: nodered/node-red-docker
+    restart: always
+    hostname: nodered
+    volumes:
+      - ./nodered:/data
+    environment:
+      - NODE_TLS_REJECT_UNAUTHORIZED=0
+      - FLOWS=centralthing_flows.json
+    labels:
+      - "traefik.frontend.rule=PathPrefixStrip:/nodered"
+      - "traefik.backend=nodered"
+      - "traefik.port=1880"
+    depends_on:
+      - influxdb
+      - mosquitto
+
+
+  influxdb:
+    image: influxdb
+    restart: always
+    hostname: influxdb
+    volumes:
+      - ./influxdb:/var/lib/influxdb
+
+
+  mosquitto:
+    image: eclipse-mosquitto
+    restart: always
+    hostname: mosquitto
+    ports:
+      - 1883:1883
+
+
+  nginx:
+    image: nginx
+    restart: always
+    volumes:
+      - ./nginx:/usr/share/nginx/html
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=nginx"
+      - "traefik.port=80"
+      - "traefik.frontend.rule=PathPrefixStrip:/"
